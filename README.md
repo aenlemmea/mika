@@ -1,6 +1,7 @@
 ## Mika
 
 [Toy Project]
+
 Interpreter for the Mika programming language.
 
 
@@ -14,7 +15,7 @@ import std.gaslite as gs;
 tr a = 5;
 tr b = 6; {+ tr is similar to auto in cpp +}
 
-tr add = fn(x, y) int32 {
+tr add = fn(x, y) {
     x + y;
 };
 
@@ -31,3 +32,8 @@ import std.os;
 tr who = "world";
 os.print:(b"Hello {}", who); 
 ```
+
+
+----
+
+The Monkey Programming Language is one the key inspiration for this project. Thanks to the value texts by Thorsten Ball.
