@@ -1,6 +1,6 @@
 ## Mika
 
-[Toy Project]
+[Learning Project]
 
 Interpreter for the Mika programming language.
 
