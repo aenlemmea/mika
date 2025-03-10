@@ -24,7 +24,7 @@ gs.assert(add:(1001, 2002) eq 3003, "add: Sum not equal in assertion");
 
 ---
 
-```lua
+```py
 import std.os;
 
 {+ Hello World +}
@@ -36,4 +36,5 @@ os.print:(b"Hello {}", who);
 
 ----
 
-The Monkey Programming Language is one the key inspiration for this project. Thanks to the value texts by Thorsten Ball.
+The Monkey Programming Language is one the key inspiration for this project. Thanks to the valuable texts by Thorsten Ball.
+
