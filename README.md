@@ -12,10 +12,7 @@ import std.gaslite as gs;
 
 {+ Sum of two numbers in Mika +}
 
-tr a = 5;
-tr b = 6; {+ tr is similar to bind variables to expressions +}
-
-tr add = fn(x, y) mutates {
+tr add = fn(x, y) {
     x + y;
 };
 
@@ -25,12 +22,16 @@ gs.assert(add:(1001, 2002) eq 3003, "add: Sum not equal in assertion");
 ---
 
 ```py
+
 import std.os;
 
-{+ Hello World +}
+tr x = 5;
 
-tr who = "world";
-os.print:(b"Hello {}", who); 
+fn increment = fn(x) mutates {
+    ++x;
+}
+
+os.print:(b"{} incremented to {}\n", x, increment:(x)")
 ```
 
 ----
