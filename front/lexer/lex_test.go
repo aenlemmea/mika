@@ -10,7 +10,7 @@ func TestNextToken(t *testing.T) {
 	input := `tr a = 2;
 tr b = 10;
 
-tr add = fn(x, y) {
+tr add = fn(x, y) mutates {
 	x + y;
 };
 
@@ -54,6 +54,7 @@ if 2 > 3 {
 		{token.COMMA, ","},
 		{token.IDENT, "y"},
 		{token.RPAREN, ")"},
+		{token.MUTATES, "mutates"},
 		{token.LCURLY, "{"},
 		{token.IDENT, "x"},
 		{token.PLUS, "+"},

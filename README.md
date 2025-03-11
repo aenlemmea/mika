@@ -13,9 +13,9 @@ import std.gaslite as gs;
 {+ Sum of two numbers in Mika +}
 
 tr a = 5;
-tr b = 6; {+ tr is similar to auto in cpp +}
+tr b = 6; {+ tr is similar to bind variables to expressions +}
 
-tr add = fn(x, y) {
+tr add = fn(x, y) mutates {
     x + y;
 };
 
@@ -32,7 +32,6 @@ import std.os;
 tr who = "world";
 os.print:(b"Hello {}", who); 
 ```
-
 
 ----
 

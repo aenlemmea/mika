@@ -43,6 +43,7 @@ const (
 	IF = "IF"
 	ELSE = "ELSE"
 	RET = "RET"
+	MUTATES = "MUTATES"
 
 	TRUE = "true"
 	FALSE = "false"
@@ -61,6 +62,7 @@ var keywords = // TODO: Somehow have this be non var.
 		"false" : FALSE,
 		"neq" : NEQ,
 		"eq" : EQ,
+		"mutates" : MUTATES,
 }
 
 func SearchIdentInKeyword(ident string) TokenKind {

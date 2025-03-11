@@ -43,7 +43,7 @@ type Identifier struct {
 }
 
 func (ids *Identifier) expressionNode() {}
-func (ids *Identifier) TokenLiteral() string { retrun ids.IdToken.Value }
+func (ids *Identifier) TokenLiteral() string { return ids.IdToken.Value }
 
 
 

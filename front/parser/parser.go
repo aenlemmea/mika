@@ -1,9 +1,8 @@
 package parser
 
 import (
-	"errors"
-	"github.com/aenlemmea/mika/front/token"
 	"github.com/aenlemmea/mika/front/lexer"
+	"github.com/aenlemmea/mika/front/token"
 )
 
 
@@ -20,11 +19,11 @@ type Parser struct {
 func New(lex *lexer.Lexer) *Parser {
 	prs := &Parser{lex : lex}
 	
-	prs.peekToken = token.ILLEGAL /* Failsafe */
+	prs.peekToken.Kind = token.ILLEGAL /* Failsafe */
 	prs.setNextToken()
 	prs.setNextToken()
 
-	return p
+	return prs
 }
 
 func (prs *Parser) setNextToken() {
@@ -32,9 +31,62 @@ func (prs *Parser) setNextToken() {
 	prs.peekToken = prs.lex.NextToken()
 }
 
-func (prs *Parser) ParseEntry() (*ast.Context, error) {
-	return nil
+func (prs *Parser) ParseContext() (*Context) {
+	program := &Context{}
+	program.Statements = []Statement{}
+
+	for prs.currToken.Kind != token.EOF {
+		statem := prs.parseStatement() 
+		if statem != nil {
+			program.Statements = append(program.Statements, statem)
+		}
+		prs.setNextToken()
+	}
+
+	return program
 }
 
+func (prs *Parser) parseStatement() Statement {
+	switch prs.currToken.Kind {
+		case token.TR:
+			return prs.parseTrStatement()
+		default:
+			return nil
+	}
+}
 
+func (prs *Parser) parseTrStatement() *TrStatement {
+	statem := &TrStatement{Token: prs.currToken}
 
+	if !prs.expectPeek(token.IDENT) {
+		return nil
+	}
+
+	statem.Name = &Identifier{Token: prs.currToken, Value: prs.currToken.Literal}
+	if !prs.expectPeek(token.ASSIGN) {
+		return nil
+	}
+
+	for !prs.currTokenIs(token.SEMICOLON) {
+		prs.setNextToken()
+	}
+
+	return statem
+}
+
+func (prs *Parser) currTokenIs(t token.TokenKind) bool {
+	return prs.currToken.Kind == t
+}
+
+func (prs *Parser) peekTokenIs(t token.TokenKind) bool {
+	return prs.peekToken.Kind == t
+}
+
+func (prs *Parser) expectPeek(t token.TokenKind) bool /* Mutates */
+	if prs.peekTokenIs(t) {
+		prs.setNextToken()
+		return true
+	} else {
+		return false
+	}
+}
