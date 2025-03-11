@@ -27,7 +27,7 @@ import std.os;
 
 tr x = 5;
 
-fn increment = fn(x) mutates {
+tr increment = fn(x) mutates {
     ++x;
 }
 
