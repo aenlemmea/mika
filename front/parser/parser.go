@@ -50,6 +50,8 @@ func New(lex *lexer.Lexer) *Parser {
 
 	prs.infxFnMap = make(map[token.TokenKind]infxFn)
 	prs.registerInfix(token.PLUS, prs.parseInfxExpr)
+	prs.registerInfix(token.MULT, prs.parseInfxExpr)
+	prs.registerInfix(token.DIV, prs.parseInfxExpr)
 	prs.registerInfix(token.MINUS, prs.parseInfxExpr)
 	prs.registerInfix(token.EQ, prs.parseInfxExpr)
 	prs.registerInfix(token.NEQ, prs.parseInfxExpr)
@@ -210,8 +212,8 @@ func (prs *Parser) parsePrfxExpr() Expression {
 func (prs *Parser) parseInfxExpr(left Expression) Expression {
 	expr := &InfxExpr{
 		InfxToken: prs.currToken,
-		Left:      left,
 		Operator:  prs.currToken.Value,
+		Left:      left,
 	}
 
 	priority := prs.currPrec()

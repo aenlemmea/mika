@@ -133,7 +133,6 @@ func (prxe *PrfxExpr) expressionNode()      {}
 func (prxe *PrfxExpr) TokenLiteral() string { return prxe.PrfxToken.Value }
 func (prxe *PrfxExpr) String() string {
 	var out bytes.Buffer
-
 	out.WriteString("(")
 	out.WriteString(prxe.Operator)
 	out.WriteString(prxe.Right.String())
