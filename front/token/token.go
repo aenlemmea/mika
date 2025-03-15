@@ -17,10 +17,12 @@ const (
 
 	ASSIGN = "="
 	PLUS = "+"
-	MINUS = "-"
 	DIV = "/"
 	MULT = "*"
+	
+	MINUS = "-"
 	BANG = "!"
+	LOWAND = "~"
 
 	GREATER = ">"
 	LESS = "<"

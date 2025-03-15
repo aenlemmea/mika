@@ -13,7 +13,7 @@ import std.gaslite as gs;
 {+ Sum of two numbers in Mika +}
 
 tr add = fn(x, y) {
-    x + y;
+    ret x + y;
 };
 
 gs.assert(add:(1001, 2002) eq 3003, "add: Sum not equal in assertion");
@@ -27,11 +27,18 @@ import std.os;
 
 tr x = 5;
 
+{+ mutates indicates that the function modifies all its arguments +}
 tr increment = fn(x) mutates {
-    ++x;
+    ret (x += 1); 
 }
 
-os.print:(b"{} incremented to {}\n", x, increment:(x)")
+{+ mutates can declare that only x mutates (reference semantics) +}
+tr decrement = fn(x, y) mutates(x) {
+    ret (x -= y);
+}
+
+os.print:(b"incremented x to {}\n", increment:(x))
+os.print:(b"decremented x to {}\n", decrement:(x, 5))
 ```
 
 ----

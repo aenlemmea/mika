@@ -67,6 +67,8 @@ func (l *Lexer) NextToken() token.Token {
 			tok = newToken(token.DIV, l.ch)
 		case '!':
 			tok = newToken(token.BANG, l.ch)
+		case '~':
+			tok = newToken(token.LOWAND, l.ch)
 		case '<':
 			tok = newToken(token.LESS, l.ch)
 		case '>':
