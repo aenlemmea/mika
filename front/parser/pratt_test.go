@@ -6,6 +6,7 @@ import (
 	"github.com/aenlemmea/mika/front/lexer"
 )
 
+// Full Infix + Prefix + (Expr<General>) tests.
 func TestPrattParsing(t *testing.T) {
 	tests := []struct {
 		input    string

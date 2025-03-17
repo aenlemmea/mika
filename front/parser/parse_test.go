@@ -7,6 +7,22 @@ import (
 	"github.com/aenlemmea/mika/front/lexer"
 )
 
+// Helper method that checks the errors string slice.
+func checkParserErrors(t *testing.T, prs *Parser) {
+	errors := prs.Errors()
+
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("Parser has %d errros", len(errors))
+	for _, msg := range errors {
+		t.Errorf("Parser error: %q", msg)
+	}
+	t.FailNow()
+}
+
+// Wrapper for all `tr` statement tests.
 func TestTrStatements(t *testing.T) {
 	input := `
 tr x = 5;
@@ -43,20 +59,7 @@ tr foobar = 12345;
 	}
 }
 
-func checkParserErrors(t *testing.T, prs *Parser) {
-	errors := prs.Errors()
-
-	if len(errors) == 0 {
-		return
-	}
-
-	t.Errorf("Parser has %d errros", len(errors))
-	for _, msg := range errors {
-		t.Errorf("Parser error: %q", msg)
-	}
-	t.FailNow()
-}
-
+// Logical checks testing if the received values and kinds are as expected.
 func testTrStatement(t *testing.T, aststatem Statement, name string) bool {
 	if aststatem.TokenLiteral() != "tr" {
 		t.Errorf(" statem.TokenLiteral not 'let'. Got: %q", aststatem.TokenLiteral())
@@ -81,6 +84,7 @@ func testTrStatement(t *testing.T, aststatem Statement, name string) bool {
 	return true
 }
 
+// Tests all the ret statements to detect if the the ret received with its value is proper.
 func TestRetStatements(t *testing.T) {
 	input := `
 ret foo;
@@ -110,6 +114,7 @@ ret 232;
 	}
 }
 
+// Tests if the identifiers received adhere to the syntax rules.
 func TestIdExpression(t *testing.T) {
 	input := "foobar;"
 
@@ -142,6 +147,27 @@ func TestIdExpression(t *testing.T) {
 	}
 }
 
+// Utility function to test for integer literal values.
+func testIntVal(t *testing.T, expr Expression, val int64) bool {
+	intgr, ok := expr.(*IntVal)
+	if !ok {
+		t.Errorf("expr is not IntVal. Got: %T", expr)
+		return false
+	}
+
+	if intgr.Value != val {
+		t.Errorf("intgr.Value is not %d. Got: %d", val, intgr.Value)
+	}
+
+	if intgr.TokenLiteral() != fmt.Sprintf("%d", val) {
+		t.Errorf("integ.TokenLiteral is not %d. Got: %s", val, intgr.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+// Tests if the integral expressions received have proper values
 func TestIntValExpr(t *testing.T) {
 	input := "5;"
 
@@ -160,20 +186,12 @@ func TestIntValExpr(t *testing.T) {
 		t.Fatalf("program.Statements[0] is not an ExprStatement. Got: %T", program.Statements[0])
 	}
 
-	val, ok := statem.Expr.(*IntVal)
-	if !ok {
-		t.Fatalf("Expr is not IntVal. Got: %T", statem.Expr)
-	}
-
-	if val.Value != 5 {
-		t.Errorf("IntVal value is not 5. Got: %d", val.Value)
-	}
-
-	if val.TokenLiteral() != "5" {
-		t.Errorf("val.TokenLiteral is not %s. Got: %s", "5", val.TokenLiteral())
+	if !testIntVal(t, statem.Expr, 5) {
+		return
 	}
 }
 
+// Test prefix expressions
 func TestPrfxParseExpr(t *testing.T) {
 	prfxInput := []struct {
 		input    string
@@ -215,25 +233,7 @@ func TestPrfxParseExpr(t *testing.T) {
 	}
 }
 
-func testIntVal(t *testing.T, expr Expression, val int64) bool {
-	intgr, ok := expr.(*IntVal)
-	if !ok {
-		t.Errorf("expr is not IntVal. Got: %T", expr)
-		return false
-	}
-
-	if intgr.Value != val {
-		t.Errorf("intgr.Value is not %d. Got: %d", val, intgr.Value)
-	}
-
-	if intgr.TokenLiteral() != fmt.Sprintf("%d", val) {
-		t.Errorf("integ.TokenLiteral is not %d. Got: %s", val, intgr.TokenLiteral())
-		return false
-	}
-
-	return true
-}
-
+// Test prefix expressions
 func TestInfxParseExpr(t *testing.T) {
 	infxInput := []struct {
 		input    string

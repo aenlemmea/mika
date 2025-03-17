@@ -11,6 +11,9 @@ import (
 // TODO See https://stackoverflow.com/questions/37135193/how-to-set-default-values-in-go-structs
 // for the problems with such a design.
 // TODO Instead extract out a device interface and have parser be a implementer.
+
+// Parser provides the access to the lexer and acts as a global subscriber of errors slice. The prfxFnMap, infxFnMap are two maps holding callables for the pratt parser to work on.
+// The parser has no access to the AST itself and purely mutates it and creates it, this leads to cleaner sync-"ability" and less overall indirection.
 type Parser struct {
 	lex *lexer.Lexer
 
@@ -32,6 +35,8 @@ func (prs *Parser) registerInfix(tokKind token.TokenKind, fn infxFn) {
 	prs.infxFnMap[tokKind] = fn
 }
 
+// Constructor for building the parser. The failsafe token is needed for detection of incorrect peekToken values.
+// Callable registration for the maps are also initialized here.
 func New(lex *lexer.Lexer) *Parser {
 	prs := &Parser{lex: lex,
 		errors: []string{},
@@ -59,20 +64,8 @@ func New(lex *lexer.Lexer) *Parser {
 	return prs
 }
 
-func (prs *Parser) parseIdentifier() Expression {
-	return &Identifier{IdToken: prs.currToken, Value: prs.currToken.Value}
-}
-
-func (prs *Parser) Errors() []string {
-	return prs.errors
-}
-
-func (prs *Parser) setNextToken() {
-	prs.currToken = prs.peekToken
-	prs.peekToken = prs.lex.NextToken()
-}
-
-func (prs *Parser) ParseContext() *Context {
+// Entrypoint of the parser to start parsing. It creates the ancestor nodes and hands over control to `parseStatement()` for further identication.
+func (prs *Parser) ParseContext() *Context /* MUTATES */ {
 	program := &Context{}
 	program.Statements = []Statement{}
 
@@ -87,6 +80,7 @@ func (prs *Parser) ParseContext() *Context {
 	return program
 }
 
+// Detect the kind of grammar we are at via the current token.
 func (prs *Parser) parseStatement() Statement {
 	switch prs.currToken.Kind {
 	case token.TR:
@@ -97,38 +91,46 @@ func (prs *Parser) parseStatement() Statement {
 		return prs.parseExprStatement()
 	}
 }
-func (prs *Parser) parseExprStatement() *ExprStatement {
-	statem := &ExprStatement{ExprToken: prs.currToken}
 
-	statem.Expr = prs.parseExpr(LOWEST)
-
-	if prs.peekTokenIs(token.SEMICOLON) {
-		prs.setNextToken()
-	} else {
-		msg := fmt.Sprintf("Missing semicolon @ Expr. Seeing: %q", prs.peekToken)
-		prs.errors = append(prs.errors, msg)
-	}
-	return statem
+func (prs *Parser) Errors() []string {
+	return prs.errors
 }
 
-func (prs *Parser) parseExpr(priority int) Expression {
-	prefix := prs.prfxFnMap[prs.currToken.Kind]
-	if prefix == nil {
-		return nil
-	}
+// The actual iterator over tokens, one token at a time design.
+func (prs *Parser) setNextToken() /* MUTATES */ {
+	prs.currToken = prs.peekToken
+	prs.peekToken = prs.lex.NextToken()
+}
 
-	leftExpr := prefix()
+func (prs *Parser) currTokenIs(t token.TokenKind) bool {
+	return prs.currToken.Kind == t
+}
 
-	for !prs.peekTokenIs(token.SEMICOLON) && priority < prs.peekPrec() {
-		infx := prs.infxFnMap[prs.peekToken.Kind]
-		if infx == nil {
-			return leftExpr
-		}
+func (prs *Parser) peekTokenIs(t token.TokenKind) bool {
+	return prs.peekToken.Kind == t
+}
 
+// Utility method, majorly provided for non core tool development.
+func (prs *Parser) peekError(t token.TokenKind) {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, prs.peekToken.Kind)
+	prs.errors = append(prs.errors, msg)
+}
+
+// Utility method, majorly provided for non core tool development.
+func (prs *Parser) expectPeek(t token.TokenKind) bool /* Mutates */ {
+	if prs.peekTokenIs(t) {
 		prs.setNextToken()
-		leftExpr = infx(leftExpr)
+		return true
+	} else {
+		prs.peekError(t)
+		return false
 	}
-	return leftExpr
+}
+
+// PARSING CORE METHODS
+
+func (prs *Parser) parseIdentifier() Expression {
+	return &Identifier{IdToken: prs.currToken, Value: prs.currToken.Value}
 }
 
 func (prs *Parser) parseTrStatement() *TrStatement {
@@ -148,29 +150,6 @@ func (prs *Parser) parseTrStatement() *TrStatement {
 	}
 
 	return statem
-}
-
-func (prs *Parser) currTokenIs(t token.TokenKind) bool {
-	return prs.currToken.Kind == t
-}
-
-func (prs *Parser) peekTokenIs(t token.TokenKind) bool {
-	return prs.peekToken.Kind == t
-}
-
-func (prs *Parser) peekError(t token.TokenKind) {
-	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, prs.peekToken.Kind)
-	prs.errors = append(prs.errors, msg)
-}
-
-func (prs *Parser) expectPeek(t token.TokenKind) bool /* Mutates */ {
-	if prs.peekTokenIs(t) {
-		prs.setNextToken()
-		return true
-	} else {
-		prs.peekError(t)
-		return false
-	}
 }
 
 func (prs *Parser) parseIntValExpr() Expression {
@@ -196,28 +175,4 @@ func (prs *Parser) parseRetStatement() *RetStatement {
 	}
 
 	return statem
-}
-
-func (prs *Parser) parsePrfxExpr() Expression {
-	expr := &PrfxExpr{
-		PrfxToken: prs.currToken,
-		Operator:  prs.currToken.Value,
-	}
-
-	prs.setNextToken()
-	expr.Right = prs.parseExpr(PREFIX)
-	return expr
-}
-
-func (prs *Parser) parseInfxExpr(left Expression) Expression {
-	expr := &InfxExpr{
-		InfxToken: prs.currToken,
-		Operator:  prs.currToken.Value,
-		Left:      left,
-	}
-
-	priority := prs.currPrec()
-	prs.setNextToken()
-	expr.Right = prs.parseExpr(priority)
-	return expr
 }

@@ -21,6 +21,7 @@ type Expression interface {
 	expressionNode()
 }
 
+// Represents a program context. Always the "root" to hold other nodes.
 type Context struct {
 	Statements []Statement
 }
@@ -43,6 +44,7 @@ func (ctx *Context) TokenLiteral() string {
 	}
 }
 
+// TR Statements :: Statement
 type TrStatement struct {
 	PrimToken tok.Token
 	Name      *Identifier
@@ -66,17 +68,7 @@ func (trs *TrStatement) String() string {
 	return out.String()
 }
 
-type Identifier struct {
-	IdToken tok.Token
-	Value   string
-}
-
-func (ids *Identifier) expressionNode()      {}
-func (ids *Identifier) TokenLiteral() string { return ids.IdToken.Value }
-func (ids *Identifier) String() string {
-	return ids.Value
-}
-
+// RET Statements :: Statement
 type RetStatement struct {
 	RetToken tok.Token
 	RetValue Expression
@@ -98,6 +90,7 @@ func (rs *RetStatement) String() string {
 	return out.String()
 }
 
+// EXPR Statement :: Statement
 type ExprStatement struct {
 	ExprToken tok.Token
 	Expr      Expression
@@ -112,6 +105,19 @@ func (expr *ExprStatement) String() string {
 	return ""
 }
 
+// IDENTIFIER :: Expression
+type Identifier struct {
+	IdToken tok.Token
+	Value   string
+}
+
+func (ids *Identifier) expressionNode()      {}
+func (ids *Identifier) TokenLiteral() string { return ids.IdToken.Value }
+func (ids *Identifier) String() string {
+	return ids.Value
+}
+
+// INTEGER VALUES :: Expression
 type IntVal struct {
 	IntToken tok.Token
 	Value    int64
@@ -123,6 +129,7 @@ func (intv *IntVal) String() string {
 	return intv.IntToken.Value
 }
 
+// PREFIX EXPR :: Expression
 type PrfxExpr struct {
 	PrfxToken tok.Token
 	Operator  string
@@ -141,6 +148,7 @@ func (prxe *PrfxExpr) String() string {
 	return out.String()
 }
 
+// INFIX EXPR :: Expression
 type InfxExpr struct {
 	InfxToken tok.Token
 	Left      Expression
