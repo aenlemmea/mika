@@ -28,6 +28,7 @@ func TestTrStatements(t *testing.T) {
 tr x = 5;
 tr y = 10;
 tr foobar = 12345;
+tr ok = false;
 `
 	lex := lexer.New(input)
 	parse := New(lex)
@@ -39,7 +40,7 @@ tr foobar = 12345;
 		t.Fatalf("Context not found")
 	}
 
-	if len(program.Statements) != 3 {
+	if len(program.Statements) != 4 {
 		t.Fatalf("program.Statements does not contain 3 statements. Got = %d", len(program.Statements))
 	}
 
@@ -49,6 +50,7 @@ tr foobar = 12345;
 		{"x"},
 		{"y"},
 		{"foobar"},
+		{"ok"},
 	}
 
 	for i, tt := range tests {
@@ -114,6 +116,85 @@ ret 232;
 	}
 }
 
+// TODO Generics
+// Utility function to test for integer literal values.
+func testIntVal(t *testing.T, expr Expression, val int64) bool {
+	intgr, ok := expr.(*IntVal)
+	if !ok {
+		t.Errorf("expr is not IntVal. Got: %T", expr)
+		return false
+	}
+
+	if intgr.Value != val {
+		t.Errorf("intgr.Value is not %d. Got: %d", val, intgr.Value)
+	}
+
+	if intgr.TokenLiteral() != fmt.Sprintf("%d", val) {
+		t.Errorf("integ.TokenLiteral is not %d. Got: %s", val, intgr.TokenLiteral())
+		return false
+	}
+
+	return true
+}
+
+// Helper function to test interface compatibility for identifiers.
+func testIdVal(t *testing.T, expr Expression, val string) bool {
+	iden, ok := expr.(*Identifier)
+	if !ok {
+		t.Fatalf("expr is not Identifier. Got=%T", expr)
+		return false
+	}
+
+	if iden.Value != val {
+		t.Errorf("iden.Value is not %s. Got: %s", val, iden.Value)
+		return false
+	}
+
+	if iden.TokenLiteral() != val {
+		t.Errorf("iden.TokenLiteral is not %s. Got: %s", val, iden.TokenLiteral())
+		return false
+	}
+	return true
+}
+
+func TestBooleanExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"true;", true},
+		{"false;", false},
+	}
+
+	for _, tt := range tests {
+		lex := lexer.New(tt.input)
+		parse := New(lex)
+
+		program := parse.ParseContext()
+		checkParserErrors(t, parse)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("Program has incorrect number of statement. Got: %d",
+				len(program.Statements))
+		}
+
+		statem, ok := program.Statements[0].(*ExprStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ExpressionStatement. Got: %T",
+				program.Statements[0])
+		}
+
+		boolean, ok := statem.Expr.(*Boolean)
+		if !ok {
+			t.Fatalf("statem.Expression not *Boolean. got=%T", statem.Expr)
+		}
+		if boolean.Val != tt.expected {
+			t.Errorf("boolean.Value is not %t. got=%t", tt.expected,
+				boolean.Val)
+		}
+	}
+}
+
 // Tests if the identifiers received adhere to the syntax rules.
 func TestIdExpression(t *testing.T) {
 	input := "foobar;"
@@ -133,38 +214,9 @@ func TestIdExpression(t *testing.T) {
 		t.Fatalf("Program.Statements[0] is not ExprStatement. Got: %T", program.Statements[0])
 	}
 
-	ident, ok := statem.Expr.(*Identifier)
-	if !ok {
-		t.Fatalf("Expr not Identifier. Got: %T", statem.Expr)
+	if !testIdVal(t, statem.Expr, "foobar") {
+		return
 	}
-
-	if ident.Value != "foobar" {
-		t.Errorf("ident.Value not %s. Got: %s", "foobar", ident.Value)
-	}
-
-	if ident.TokenLiteral() != "foobar" {
-		t.Errorf("ident.TokenLiteral not %s. Got: %s", "foobar", ident.TokenLiteral())
-	}
-}
-
-// Utility function to test for integer literal values.
-func testIntVal(t *testing.T, expr Expression, val int64) bool {
-	intgr, ok := expr.(*IntVal)
-	if !ok {
-		t.Errorf("expr is not IntVal. Got: %T", expr)
-		return false
-	}
-
-	if intgr.Value != val {
-		t.Errorf("intgr.Value is not %d. Got: %d", val, intgr.Value)
-	}
-
-	if intgr.TokenLiteral() != fmt.Sprintf("%d", val) {
-		t.Errorf("integ.TokenLiteral is not %d. Got: %s", val, intgr.TokenLiteral())
-		return false
-	}
-
-	return true
 }
 
 // Tests if the integral expressions received have proper values
@@ -246,6 +298,7 @@ func TestInfxParseExpr(t *testing.T) {
 		//{"5 * 5;", 5, "*", 5},
 		{"5 eq 5;", 5, "eq", 5},
 		{"5 neq 5;", 5, "neq", 5},
+		// {"true eq true;", true, "eq", true}, // TODO Add interfaces to left and right val to enable testing this. https://stackoverflow.com/questions/31557539/golang-how-to-simulate-union-type-efficiently
 	}
 
 	for _, tt := range infxInput {

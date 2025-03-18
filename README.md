@@ -4,6 +4,7 @@
 
 Interpreter for the Mika programming language.
 
+The code is documented. You can view the docs using the godoc command (port 6060 at localhost) and is available in the third part page.
 
 ## Sample
 

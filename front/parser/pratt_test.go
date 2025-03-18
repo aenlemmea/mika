@@ -13,6 +13,10 @@ func TestPrattParsing(t *testing.T) {
 		expected string
 	}{
 		{
+			"5 * (5 + 5);",
+			"(5 * (5 + 5))",
+		},
+		{
 			"-x * y;",
 			"((-x) * y)",
 		},

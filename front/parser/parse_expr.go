@@ -110,3 +110,15 @@ func (prs *Parser) parseInfxExpr(left Expression) Expression {
 	expr.Right = prs.parseExpr(priority)
 	return expr
 }
+
+// Parse the grouped expressions.
+func (prs *Parser) parseGroupedExpr() Expression {
+	prs.setNextToken()
+
+	expr := prs.parseExpr(LOWEST)
+
+	if !prs.expectPeek(token.RPAREN) {
+		return nil
+	}
+	return expr
+}

@@ -52,6 +52,9 @@ func New(lex *lexer.Lexer) *Parser {
 	prs.registerPrefix(token.BANG, prs.parsePrfxExpr)
 	prs.registerPrefix(token.MINUS, prs.parsePrfxExpr)
 	prs.registerPrefix(token.LOWAND, prs.parsePrfxExpr)
+	prs.registerPrefix(token.TRUE, prs.parseBooleanExpr)
+	prs.registerPrefix(token.FALSE, prs.parseBooleanExpr)
+	prs.registerPrefix(token.LPAREN, prs.parseGroupedExpr)
 
 	prs.infxFnMap = make(map[token.TokenKind]infxFn)
 	prs.registerInfix(token.PLUS, prs.parseInfxExpr)
@@ -150,6 +153,10 @@ func (prs *Parser) parseTrStatement() *TrStatement {
 	}
 
 	return statem
+}
+
+func (prs *Parser) parseBooleanExpr() Expression {
+	return &Boolean{BoolToken: prs.currToken, Val: prs.currTokenIs(token.TRUE)}
 }
 
 func (prs *Parser) parseIntValExpr() Expression {
